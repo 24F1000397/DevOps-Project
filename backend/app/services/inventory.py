@@ -174,3 +174,160 @@ def delete_item(db: Session, item_id: int) -> None:
     db_item = get_item(db, item_id)
     db.delete(db_item)
     db.commit()
+
+
+# --- Category Services ---
+
+def get_categories(db: Session) -> List[Category]:
+    """Retrieve all categories ordered by name."""
+    return db.query(Category).order_by(Category.name.asc()).all()
+
+
+def get_category(db: Session, category_id: int) -> Category:
+    """Retrieve category by ID or raise 404."""
+    category = db.query(Category).filter(Category.id == category_id).first()
+    if not category:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Category with ID {category_id} not found",
+        )
+    return category
+
+
+def create_category(db: Session, name: str, description: Optional[str] = None) -> Category:
+    """Create a new equipment/asset category."""
+    clean_name = name.strip()
+    existing = db.query(Category).filter(Category.name.ilike(clean_name)).first()
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Category '{clean_name}' already exists",
+        )
+
+    db_category = Category(name=clean_name, description=description)
+    db.add(db_category)
+    db.commit()
+    db.refresh(db_category)
+    return db_category
+
+
+def delete_category(db: Session, category_id: int) -> None:
+    """Delete a category and dissociate linked items."""
+    db_category = get_category(db, category_id)
+    db.delete(db_category)
+    db.commit()
+
+
+# --- Stock Issue & Return Operations ---
+
+def issue_item(db: Session, item_id: int, quantity: int, notes: Optional[str] = None) -> Transaction:
+    """
+    Issue stock units for an item.
+    Decreases available_quantity, checks availability, and creates an ISSUE transaction.
+    """
+    if quantity <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Issue quantity must be greater than zero",
+        )
+
+    db_item = get_item(db, item_id)
+
+    if db_item.available_quantity < quantity:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot issue {quantity} units. Only {db_item.available_quantity} available in stock",
+        )
+
+    # Decrease available stock
+    db_item.available_quantity -= quantity
+    db_item.status = compute_item_status(db_item.available_quantity, db_item.minimum_stock)
+
+    # Record audit transaction
+    txn = Transaction(
+        item_id=item_id,
+        transaction_type=TransactionType.ISSUE.value,
+        quantity=quantity,
+        notes=notes,
+    )
+    db.add(txn)
+    db.commit()
+    db.refresh(txn)
+    return txn
+
+
+def return_item(db: Session, item_id: int, quantity: int, notes: Optional[str] = None) -> Transaction:
+    """
+    Return previously issued stock units.
+    Increases available_quantity up to total quantity and creates a RETURN transaction.
+    """
+    if quantity <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Return quantity must be greater than zero",
+        )
+
+    db_item = get_item(db, item_id)
+
+    if db_item.available_quantity + quantity > db_item.quantity:
+        max_returnable = db_item.quantity - db_item.available_quantity
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot return {quantity} units. At most {max_returnable} units are currently checked out",
+        )
+
+    # Increase available stock
+    db_item.available_quantity += quantity
+    db_item.status = compute_item_status(db_item.available_quantity, db_item.minimum_stock)
+
+    # Record audit transaction
+    txn = Transaction(
+        item_id=item_id,
+        transaction_type=TransactionType.RETURN.value,
+        quantity=quantity,
+        notes=notes,
+    )
+    db.add(txn)
+    db.commit()
+    db.refresh(txn)
+    return txn
+
+
+# --- Transactions History & Statistics ---
+
+def get_transactions(
+    db: Session,
+    item_id: Optional[int] = None,
+    transaction_type: Optional[str] = None,
+    limit: int = 100,
+) -> List[Transaction]:
+    """Retrieve audit transactions log with optional item or type filters."""
+    query = db.query(Transaction)
+    if item_id is not None:
+        query = query.filter(Transaction.item_id == item_id)
+    if transaction_type:
+        query = query.filter(Transaction.transaction_type == transaction_type.upper())
+    return query.order_by(Transaction.id.desc()).limit(limit).all()
+
+
+def get_inventory_stats(db: Session) -> dict:
+    """Compute real-time inventory aggregated metrics."""
+    items = db.query(Item).all()
+    categories_count = db.query(Category).count()
+
+    total_items = len(items)
+    total_quantity = sum(item.quantity for item in items)
+    available_stock = sum(item.available_quantity for item in items)
+    issued_items = total_quantity - available_stock
+    low_stock_items = sum(1 for item in items if 0 < item.available_quantity <= item.minimum_stock)
+    out_of_stock_items = sum(1 for item in items if item.available_quantity == 0)
+
+    return {
+        "total_items": total_items,
+        "total_quantity": total_quantity,
+        "available_stock": available_stock,
+        "issued_items": issued_items,
+        "low_stock_items": low_stock_items,
+        "out_of_stock_items": out_of_stock_items,
+        "categories_count": categories_count,
+    }

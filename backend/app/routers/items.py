@@ -3,7 +3,13 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.schemas import ItemCreate, ItemUpdate, ItemResponse
+from app.schemas import (
+    ItemCreate,
+    ItemUpdate,
+    ItemResponse,
+    StockOperationRequest,
+    TransactionResponse,
+)
 from app.services import inventory as inventory_service
 
 router = APIRouter(prefix="/items", tags=["Items"])
@@ -58,3 +64,33 @@ def delete_existing_item(item_id: int, db: Session = Depends(get_db)):
     """Delete an item and its associated history."""
     inventory_service.delete_item(db=db, item_id=item_id)
     return None
+
+
+@router.post("/{item_id}/issue", response_model=TransactionResponse, status_code=status.HTTP_200_OK)
+def issue_item_units(
+    item_id: int,
+    operation: StockOperationRequest,
+    db: Session = Depends(get_db),
+):
+    """Issue inventory units to student, faculty, or lab department."""
+    return inventory_service.issue_item(
+        db=db,
+        item_id=item_id,
+        quantity=operation.quantity,
+        notes=operation.notes,
+    )
+
+
+@router.post("/{item_id}/return", response_model=TransactionResponse, status_code=status.HTTP_200_OK)
+def return_item_units(
+    item_id: int,
+    operation: StockOperationRequest,
+    db: Session = Depends(get_db),
+):
+    """Return checked-out inventory units back into available stock."""
+    return inventory_service.return_item(
+        db=db,
+        item_id=item_id,
+        quantity=operation.quantity,
+        notes=operation.notes,
+    )
