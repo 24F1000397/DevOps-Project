@@ -20,8 +20,10 @@ RUN groupadd -g 10001 appgroup && \
 
 # Install Python requirements
 COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir -r requirements.txt && \
+    rm -rf /usr/local/lib/python3.10/site-packages/pip* \
+           /usr/local/lib/python3.10/ensurepip
 
 # Copy application and migration code
 COPY --chown=appuser:appgroup alembic.ini .
