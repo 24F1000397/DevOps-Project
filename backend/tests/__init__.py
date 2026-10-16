@@ -1,0 +1,1 @@
+"""CampusStock automated test suite."""

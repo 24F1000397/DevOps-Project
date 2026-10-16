@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from fastapi import HTTPException, status
 
-from app.models import Item, Category, Transaction, ItemStatus
+from app.models import Item, Category, Transaction, ItemStatus, TransactionType
 from app.schemas import ItemCreate, ItemUpdate
 
 
