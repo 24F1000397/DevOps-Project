@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import check_database_connection, get_db
+from app.routers import items
 
 app = FastAPI(
     title="CampusStock — Campus Inventory & Asset Management System",
@@ -24,6 +25,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include Routers
+app.include_router(items.router, prefix=settings.API_PREFIX)
 
 
 @app.get("/", tags=["Root"])
