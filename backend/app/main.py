@@ -1,9 +1,11 @@
 import os
-from fastapi import FastAPI, status
+from fastapi import FastAPI, status, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
 
 from app.config import settings
+from app.database import check_database_connection, get_db
 
 app = FastAPI(
     title="CampusStock — Campus Inventory & Asset Management System",
@@ -50,9 +52,18 @@ def health_check():
 @app.get("/ready", tags=["Health"])
 def readiness_check():
     """Readiness probe endpoint checking app and database readiness."""
-    # When database module is added in subsequent milestone, this probes the DB
+    db_ok = check_database_connection()
+    if not db_ok:
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content={
+                "status": "unready",
+                "service": settings.APP_NAME,
+                "database": "disconnected",
+            },
+        )
     return {
         "status": "ready",
         "service": settings.APP_NAME,
-        "database": "configured",
+        "database": "connected",
     }
