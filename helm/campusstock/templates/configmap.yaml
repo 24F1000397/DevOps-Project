@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "campusstock.fullname" . }}-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "campusstock.labels" . | nindent 4 }}
+data:
+  APP_NAME: "CampusStock"
+  APP_ENV: "production"
+  PORT: "8000"
+  HOST: "0.0.0.0"
+  CORS_ORIGINS: "*"

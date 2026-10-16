@@ -1,0 +1,101 @@
+# CampusStock Helm Chart Configuration Values
+
+namespace: campusstock
+
+# Backend Configuration
+backend:
+  replicaCount: 2
+  image:
+    repository: ghcr.io/campusstock/campusstock-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8000
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 75
+  probes:
+    liveness:
+      path: /health
+      initialDelaySeconds: 15
+      periodSeconds: 10
+    readiness:
+      path: /ready
+      initialDelaySeconds: 10
+      periodSeconds: 5
+
+# Frontend Configuration
+frontend:
+  replicaCount: 2
+  image:
+    repository: ghcr.io/campusstock/campusstock-frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+    targetCPUUtilizationPercentage: 80
+  probes:
+    liveness:
+      path: /
+      initialDelaySeconds: 15
+      periodSeconds: 10
+    readiness:
+      path: /
+      initialDelaySeconds: 10
+      periodSeconds: 5
+
+# PostgreSQL Internal Service
+postgres:
+  enabled: true
+  image: postgres:15-alpine
+  persistence:
+    size: 5Gi
+    storageClass: ""
+  credentials:
+    user: campus_user
+    password: campus_password
+    database: campusstock_db
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# Ingress Configuration
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/proxy-body-size: "20m"
+  host: ""
+
+# ServiceAccount Configuration
+serviceAccount:
+  create: true
+  name: campusstock-sa

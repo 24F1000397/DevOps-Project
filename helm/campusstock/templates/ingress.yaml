@@ -1,0 +1,67 @@
+{{- if .Values.ingress.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "campusstock.fullname" . }}-ingress
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "campusstock.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
+  rules:
+    - {{- if .Values.ingress.host }}
+      host: {{ .Values.ingress.host | quote }}
+      {{- end }}
+      http:
+        paths:
+          # Backend API Routing
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "campusstock.fullname" . }}-backend
+                port:
+                  number: {{ .Values.backend.service.port }}
+          - path: /health
+            pathType: Exact
+            backend:
+              service:
+                name: {{ include "campusstock.fullname" . }}-backend
+                port:
+                  number: {{ .Values.backend.service.port }}
+          - path: /ready
+            pathType: Exact
+            backend:
+              service:
+                name: {{ include "campusstock.fullname" . }}-backend
+                port:
+                  number: {{ .Values.backend.service.port }}
+          - path: /docs
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "campusstock.fullname" . }}-backend
+                port:
+                  number: {{ .Values.backend.service.port }}
+          - path: /openapi.json
+            pathType: Exact
+            backend:
+              service:
+                name: {{ include "campusstock.fullname" . }}-backend
+                port:
+                  number: {{ .Values.backend.service.port }}
+          # Frontend SPA Routing
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "campusstock.fullname" . }}-frontend
+                port:
+                  number: {{ .Values.frontend.service.port }}
+{{- end }}

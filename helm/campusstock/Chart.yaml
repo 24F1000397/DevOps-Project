@@ -1,0 +1,13 @@
+apiVersion: v2
+name: campusstock
+description: A production-ready Helm chart for CampusStock Campus Inventory & Asset Management System
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - campusstock
+  - inventory
+  - asset-management
+  - devops
+maintainers:
+  - name: CampusStock DevOps Team
