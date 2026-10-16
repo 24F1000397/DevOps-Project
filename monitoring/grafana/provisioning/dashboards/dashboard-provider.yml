@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: "CampusStock Dashboards"
+    orgId: 1
+    folder: "CampusStock"
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards

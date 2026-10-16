@@ -2,6 +2,7 @@ import os
 from fastapi import FastAPI, status, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from prometheus_fastapi_instrumentator import Instrumentator
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -26,6 +27,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Real Prometheus Metrics Instrumentation
+instrumentator = Instrumentator(
+    should_group_status_codes=True,
+    should_ignore_untemplated=True,
+    should_instrument_requests_inprogress=True,
+    excluded_handlers=["/metrics", "/health", "/ready"],
+    inprogress_name="campusstock_http_requests_inprogress",
+    inprogress_labels=True,
+)
+instrumentator.instrument(app).expose(app, endpoint="/metrics", tags=["Monitoring"], include_in_schema=True)
+
 # Include Routers
 app.include_router(items.router, prefix=settings.API_PREFIX)
 app.include_router(categories.router, prefix=settings.API_PREFIX)
@@ -42,6 +54,7 @@ def read_root():
         "docs": "/docs",
         "health": "/health",
         "ready": "/ready",
+        "metrics": "/metrics",
         "version": "1.0.0",
     }
 

@@ -24,3 +24,12 @@ def test_root_endpoint(client):
     data = response.json()
     assert data["service"] == "CampusStock"
     assert data["docs"] == "/docs"
+    assert data["metrics"] == "/metrics"
+
+
+def test_metrics_endpoint(client):
+    """Test /metrics Prometheus exporter endpoint returns 200 and metric streams."""
+    response = client.get("/metrics")
+    assert response.status_code == 200
+    assert "http_requests" in response.text or "python_info" in response.text or "process_virtual_memory_bytes" in response.text
+
