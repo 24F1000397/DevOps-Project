@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: campusstock-config
+  namespace: campusstock
+  labels:
+    app.kubernetes.io/name: campusstock
+data:
+  APP_NAME: "CampusStock"
+  APP_ENV: "production"
+  PORT: "8000"
+  HOST: "0.0.0.0"
+  CORS_ORIGINS: "*"
