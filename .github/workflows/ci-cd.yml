@@ -8,16 +8,21 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+
 jobs:
   test-and-build:
-    name: Backend Tests and Frontend Build
+    name: Test, Security Scan & Container Registry Publish
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      # Backend CI
+      # Backend CI & Automated Tests
       - name: Set up Python 3.10
         uses: actions/setup-python@v5
         with:
@@ -35,7 +40,7 @@ jobs:
         env:
           APP_ENV: testing
 
-      # Frontend CI
+      # Frontend CI & Production Build
       - name: Set up Node.js 20
         uses: actions/setup-node@v4
         with:
@@ -53,14 +58,61 @@ jobs:
         run: |
           npm run build
 
-      # Container Image Build Verification
+      # Docker Environment Setup
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Log in to GitHub Container Registry (GHCR)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set Lowercase Image Names
+        run: |
+          REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "BACKEND_IMAGE=ghcr.io/${REPO_OWNER}/campusstock-backend:${{ github.sha }}" >> $GITHUB_ENV
+          echo "FRONTEND_IMAGE=ghcr.io/${REPO_OWNER}/campusstock-frontend:${{ github.sha }}" >> $GITHUB_ENV
+
+      # Container Image Building with SHA Tagging
       - name: Build Backend Docker Image
         run: |
-          docker build -t campusstock-backend:${{ github.sha }} ./backend
+          docker build -t ${{ env.BACKEND_IMAGE }} ./backend
 
       - name: Build Frontend Docker Image
         run: |
-          docker build -t campusstock-frontend:${{ github.sha }} ./frontend
+          docker build -t ${{ env.FRONTEND_IMAGE }} ./frontend
+
+      # Trivy Security Scanning (fails on HIGH or CRITICAL vulnerabilities)
+      - name: Run Trivy Vulnerability Scan on Backend Image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.BACKEND_IMAGE }}
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Run Trivy Vulnerability Scan on Frontend Image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.FRONTEND_IMAGE }}
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      # Publish to GHCR using Commit SHA Tags
+      - name: Push Backend Image to GHCR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          docker push ${{ env.BACKEND_IMAGE }}
+
+      - name: Push Frontend Image to GHCR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          docker push ${{ env.FRONTEND_IMAGE }}
