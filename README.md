@@ -827,4 +827,7 @@ terraform destroy -auto-approve
 ```
 
 <!-- Final demo verification -->
-CampusStock DevOps Capstone — Final Demo
+## 32. CampusStock DevOps Capstone — Final Demo 
+## 🎥 Demo Video
+
+[Watch the CampusStock Demo Video](demo/CampusStock-Demo.mp4)
