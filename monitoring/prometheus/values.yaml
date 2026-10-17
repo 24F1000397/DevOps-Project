@@ -1,0 +1,20 @@
+prometheus:
+  prometheusSpec:
+    scrapeInterval: 15s
+    evaluationInterval: 15s
+
+    serviceMonitorSelector:
+      matchLabels:
+        release: monitoring
+
+    serviceMonitorNamespaceSelector:
+      matchNames:
+        - monitoring
+
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi

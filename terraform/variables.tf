@@ -1,7 +1,7 @@
 variable "aws_region" {
   description = "AWS deployment region"
   type        = string
-  default     = "ap-south-1"
+  default = "ap-southeast-2"
 }
 
 variable "environment" {
@@ -25,7 +25,7 @@ variable "vpc_cidr" {
 variable "availability_zones" {
   description = "List of AWS availability zones in ap-south-1"
   type        = list(string)
-  default     = ["ap-south-1a", "ap-south-1b"]
+  default = ["ap-southeast-2a", "ap-southeast-2b"]
 }
 
 variable "public_subnet_cidrs" {
@@ -43,13 +43,13 @@ variable "private_subnet_cidrs" {
 variable "node_instance_types" {
   description = "EC2 instance types for EKS worker nodes"
   type        = list(string)
-  default     = ["t3.medium"]
+  default     = ["t3.small"]
 }
 
 variable "node_desired_size" {
   description = "Desired number of worker nodes in the node group"
   type        = number
-  default     = 2
+  default     = 4
 }
 
 variable "node_min_size" {

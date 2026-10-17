@@ -12,12 +12,9 @@ COPY . .
 RUN npm run build
 
 # Stage 2: Serve via Nginx
-FROM nginx:alpine
+FROM nginxinc/nginx-unprivileged:alpine
 
 WORKDIR /usr/share/nginx/html
-
-# Remove default static assets
-RUN rm -rf ./*
 
 # Copy built artifacts from builder stage
 COPY --from=builder /app/dist .
@@ -25,9 +22,9 @@ COPY --from=builder /app/dist .
 # Copy production Nginx reverse proxy configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 80
+EXPOSE 8080
 
 HEALTHCHECK --interval=20s --timeout=5s --start-period=5s --retries=3 \
-  CMD wget --quiet --tries=1 --spider http://localhost/ || exit 1
+  CMD wget --quiet --tries=1 --spider http://127.0.0.1:8080/ || exit 1
 
 CMD ["nginx", "-g", "daemon off;"]

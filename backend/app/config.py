@@ -11,7 +11,9 @@ class Settings(BaseSettings):
     PORT: int = 8000
     DATABASE_URL: str = os.getenv(
         "DATABASE_URL",
-        "postgresql://campus_user:campus_password@localhost:5432/campusstock_db",
+        f"postgresql://{os.getenv('POSTGRES_USER', 'postgres')}:{os.getenv('POSTGRES_PASSWORD', '')}@{os.getenv('POSTGRES_HOST', 'localhost')}:{os.getenv('POSTGRES_PORT', '5432')}/{os.getenv('POSTGRES_DB', 'campusstock_db')}"
+        if os.getenv("POSTGRES_PASSWORD")
+        else "postgresql://localhost:5432/campusstock_db",
     )
     CORS_ORIGINS: str = "*"
 

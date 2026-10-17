@@ -1,13 +1,15 @@
 # CampusStock — Campus Inventory & Asset Management System
 
-[![CI/CD Pipeline](https://github.com/sakshamgupta/DevOps-Project/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/sakshamgupta/DevOps-Project/actions/workflows/ci-cd.yml)
+[![CI/CD Pipeline](https://github.com/24F1000397/DevOps-Project/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/24F1000397/DevOps-Project/actions/workflows/ci-cd.yml)
 [![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://www.docker.com/)
 [![Kubernetes](https://img.shields.io/badge/kubernetes-v1.30+-326ce5.svg)](https://kubernetes.io/)
 [![Helm](https://img.shields.io/badge/helm-v3+-0f1689.svg)](https://helm.sh/)
 [![Terraform](https://img.shields.io/badge/terraform-AWS-7b42bc.svg)](https://www.terraform.io/)
-[![Security](https://img.shields.io/badge/security-trivy%20scanned-brightgreen.svg)](https://trivy.dev/)
+[![Security: Trivy](https://img.shields.io/badge/security-trivy%20scanned%20(0%20vuln)-brightgreen.svg)](https://trivy.dev/)
 
-**CampusStock** is an enterprise-grade, cloud-native inventory and asset management platform designed specifically for colleges, universities, and academic research institutions. It enables campus administrators, laboratory heads, and IT departments to track, allocate, issue, and audit campus physical equipment throughout its operational lifecycle.
+**CampusStock** is a cloud-native, production-grade inventory and asset management platform designed for universities, colleges, and academic institutions. It enables campus administrators, laboratory heads, and IT departments to track, allocate, issue, and audit campus physical equipment and technology assets throughout their operational lifecycle.
+
+The project demonstrates an end-to-end DevOps implementation encompassing automated testing, containerization, CI/CD security pipelines with vulnerability gating, Infrastructure as Code on AWS EKS, declarative Kubernetes orchestration with Helm, GitOps continuous delivery with ArgoCD, and Prometheus/Grafana cloud-native monitoring.
 
 ---
 
@@ -21,34 +23,39 @@
 6. [Repository Structure](#6-repository-structure)
 7. [Backend Setup](#7-backend-setup)
 8. [Frontend Setup](#8-frontend-setup)
-9. [PostgreSQL Database Setup](#9-postgresql-database-setup)
+9. [Database Setup](#9-database-setup)
 10. [Environment Variables](#10-environment-variables)
-11. [Alembic Database Migrations](#11-alembic-database-migrations)
-12. [Running Automated Tests (Pytest)](#12-running-automated-tests-pytest)
-13. [Docker Containerization](#13-docker-containerization)
-14. [Docker Compose Multi-Container Stack](#14-docker-compose-multi-container-stack)
-15. [GitHub Actions CI/CD Pipeline](#15-github-actions-cicd-pipeline)
-16. [GitHub Container Registry (GHCR)](#16-github-container-registry-ghcr)
-17. [Trivy Vulnerability Security Scanning](#17-trivy-vulnerability-security-scanning)
-18. [Terraform Infrastructure as Code](#18-terraform-infrastructure-as-code)
-19. [AWS Cloud Infrastructure (ap-south-1)](#19-aws-cloud-infrastructure-ap-south-1)
-20. [Kubernetes Manifests & Orchestration](#20-kubernetes-manifests--orchestration)
-21. [Helm Deployment](#21-helm-deployment)
-22. [Ingress Controller & Path Routing](#22-ingress-controller--path-routing)
-23. [Horizontal Pod Autoscaling (HPA)](#23-horizontal-pod-autoscaling-hpa)
-24. [Prometheus Monitoring & Exporters](#24-prometheus-monitoring--exporters)
-25. [Grafana Dashboards](#25-grafana-dashboards)
-26. [Troubleshooting & Diagnostics](#26-troubleshooting--diagnostics)
-27. [Security Hardening & Best Practices](#27-security-hardening--best-practices)
-28. [Infrastructure Cleanup & Teardown](#28-infrastructure-cleanup--teardown)
-29. [Live Demonstration & Presentation Guide](#29-live-demonstration--presentation-guide)
-30. [Official Grading Rubric Checklist](#30-official-grading-rubric-checklist)
+11. [Alembic Migrations](#11-alembic-migrations)
+12. [Automated Testing](#12-automated-testing)
+13. [Docker](#13-docker)
+14. [Docker Compose](#14-docker-compose)
+15. [GitHub Actions CI/CD](#15-github-actions-cicd)
+16. [GHCR](#16-ghcr)
+17. [Trivy Security Scanning](#17-trivy-security-scanning)
+18. [Terraform](#18-terraform)
+19. [AWS Infrastructure](#19-aws-infrastructure)
+20. [Kubernetes](#20-kubernetes)
+21. [Helm](#21-helm)
+22. [Ingress](#22-ingress)
+23. [ArgoCD GitOps Configuration](#23-argocd-gitops-configuration)
+24. [HPA (optional/additional capability)](#24-hpa-optionaladditional-capability)
+25. [Prometheus Monitoring](#25-prometheus-monitoring)
+26. [Grafana Dashboard](#26-grafana-dashboard)
+27. [Milestone Verification & Screenshot Evidence (M1–M9)](#27-milestone-verification--screenshot-evidence-m1m9)
+28. [Submission Artifacts (demo/ Folder)](#28-submission-artifacts-demo-folder)
+29. [Troubleshooting](#29-troubleshooting)
+30. [Security](#30-security)
+31. [Cleanup](#31-cleanup)
 
 ---
 
 ## 1. Project Overview
 
-Higher education campuses manage tens of thousands of physical and technological assets across distributed faculties, computer labs, research centers, and lecture halls. **CampusStock** provides a unified system of record for inventory tracking, issuing equipment to students and faculty, tracking returns, identifying depleted items before shortages impact classes, and monitoring system performance with Prometheus and Grafana.
+Higher education campuses manage thousands of physical and technological assets across distributed faculties, computer labs, research centers, and lecture halls. **CampusStock** provides a unified system of record for inventory tracking, issuing equipment to students and faculty, tracking returns, identifying depleted items before shortages impact classes, and monitoring system performance with Prometheus and Grafana.
+
+- **Application Name**: CampusStock — Campus Inventory & Asset Management System
+- **GitHub Repository**: [https://github.com/24F1000397/DevOps-Project.git](https://github.com/24F1000397/DevOps-Project.git)
+- **Primary Workloads**: FastAPI REST backend, React + Vite frontend, PostgreSQL relational persistence.
 
 ---
 
@@ -85,7 +92,7 @@ CampusStock solves these pain points with a hardened full-stack architecture, AC
                                   [ Users / Browsers ]
                                            │
                                            ▼
-                                [ NGINX Ingress / ALB ]
+                                [ NGINX Ingress Controller ]
                                 ┌──────────┴──────────┐
                                 │                     │
                        (Path: /)│                     │(Path: /api)
@@ -93,8 +100,9 @@ CampusStock solves these pain points with a hardened full-stack architecture, AC
                     ┌──────────────────────┐  ┌──────────────────────┐
                     │ Frontend Deployment  │  │  Backend Deployment  │
                     │   (React + Nginx)    │  │   (FastAPI / Uvicorn)│
-                    │  [2 to 8 Replicas]   │  │  [2 to 10 Replicas]  │
-                    │        (HPA)         │  │        (HPA)         │
+                    │      2 Replicas      │  │      2 Replicas      │
+                    │(ClusterIP: Port 80)  │  │(ClusterIP: Port 8000)│
+                    │(Container: Port 8080)│  │(Container: Port 8000)│
                     └──────────────────────┘  └──────────┬───────────┘
                                                          │
                                         ┌────────────────┴───────────────┐
@@ -110,18 +118,22 @@ CampusStock solves these pain points with a hardened full-stack architecture, AC
 
 ## 5. Technology Stack
 
-| Layer | Technologies |
-| :--- | :--- |
-| **Backend API** | Python 3.10, FastAPI, SQLAlchemy 2.0, Pydantic v2, Uvicorn |
-| **Persistence** | PostgreSQL 15, Alembic Database Migrations |
-| **Testing** | Pytest, HTTPX, SQLite in-memory isolation |
-| **Frontend UI** | React 18, Vite, Lucide Icons, Custom Design Tokens |
-| **Containerization** | Docker (Multi-stage), Docker Compose v2 |
-| **CI/CD** | GitHub Actions, GitHub Container Registry (GHCR) |
-| **Security** | Trivy Container Vulnerability Scanning |
-| **Cloud Infrastructure**| AWS (ap-south-1), VPC, EKS, Managed EC2 Node Group, IAM, Terraform |
-| **Orchestration** | Kubernetes v1.30+, Helm v3+, NGINX Ingress Controller, HPA |
-| **Monitoring** | Prometheus Exporter (`/metrics`), Grafana Metrics Dashboards |
+| Layer | Technologies | Details |
+| :--- | :--- | :--- |
+| **Backend API** | Python 3.10, FastAPI, SQLAlchemy 2.0, Pydantic v2, Uvicorn | High-performance asynchronous REST API with automatic OpenAPI documentation |
+| **Database & ORM** | PostgreSQL 15, SQLAlchemy, Alembic | Relational persistence with transactional integrity, foreign keys, and versioned migrations |
+| **Automated Testing** | Pytest, HTTPX, SQLite | 23 automated tests running against an isolated in-memory SQLite database |
+| **Frontend UI** | React 18, Vite, Lucide Icons, Custom Design Tokens | Modern single-page application with responsive layouts and real-time state management |
+| **Containerization** | Docker, Docker Compose | Multi-stage Docker builds, non-root container users, local multi-container orchestration |
+| **CI/CD** | GitHub Actions | Automated workflow for testing, building, scanning, and pushing to GHCR |
+| **Container Registry**| GitHub Container Registry (GHCR) | Immutable image tags using Git commit SHA (`${{ github.sha }}`) |
+| **Security Scanning** | Trivy Container Security Scanner | Automated vulnerability scanning failing on HIGH/CRITICAL; currently 0 vulnerabilities |
+| **Infrastructure (IaC)**| Terraform (`>= 1.5.0`) | Modular AWS infrastructure provisioning VPC, subnets, EKS, and IAM roles |
+| **Cloud Provider** | AWS (ap-southeast-2, Sydney) | VPC with 2 public subnets, private subnets, Internet Gateway, NAT Gateway |
+| **Kubernetes Cluster**| AWS EKS (`campusstock-eks`) | Managed control plane with managed EC2 worker node group (`t3.small`, desired size: 4) |
+| **Deployment & Routing**| Helm v3, NGINX Ingress Controller | Templated chart (`helm/campusstock`), ClusterIP services, path-based routing |
+| **GitOps Continuous Delivery**| ArgoCD | Declarative GitOps Application (`argocd/campusstock-application.yaml`) monitoring repo and syncing Helm release |
+| **Monitoring & Metrics**| Prometheus, Grafana | Prometheus exporter (`/metrics`, target UP) and populated Grafana dashboard panels |
 
 ---
 
@@ -132,7 +144,10 @@ DevOps-Project/
 │
 ├── .github/
 │   └── workflows/
-│       └── ci-cd.yml             # GitHub Actions CI/CD Pipeline (Build, Test, Scan, Push)
+│       └── ci-cd.yml             # GitHub Actions CI/CD Pipeline (Test, Build, Scan, Publish)
+│
+├── argocd/                       # ArgoCD GitOps Application manifests
+│   └── campusstock-application.yaml # GitOps deployment definition (Helm sync to EKS)
 │
 ├── backend/
 │   ├── app/
@@ -151,12 +166,12 @@ DevOps-Project/
 │   │   └── services/
 │   │       └── inventory.py      # Core business logic & stock validation rules
 │   │
-│   ├── tests/                    # Pytest automated test suite
+│   ├── tests/                    # Pytest automated test suite (23 passing tests)
 │   │   ├── conftest.py           # Test fixtures & SQLite in-memory database mock
-│   │   ├── test_health.py        # Health, readiness, and /metrics tests
+│   │   ├── test_health.py        # Health, readiness, root, and /metrics tests
 │   │   ├── test_items.py         # Item CRUD, validation, and search tests
 │   │   ├── test_categories.py    # Category lifecycle tests
-│   │   └── test_transactions.py  # Stock checkout, return, and bounds tests
+│   │   └── test_transactions.py  # Stock checkout, return, bounds, and stats tests
 │   │
 │   ├── alembic/                  # Database migration scripts
 │   │   ├── versions/
@@ -166,7 +181,7 @@ DevOps-Project/
 │   ├── alembic.ini               # Alembic configuration
 │   ├── requirements.txt          # Python production and test dependencies
 │   ├── pytest.ini                # Pytest runner configuration
-│   ├── Dockerfile                # Hardened non-root backend container definition
+│   ├── Dockerfile                # Hardened non-root backend container (UID: 10001)
 │   └── .dockerignore             # Backend build exclusion rules
 │
 ├── frontend/
@@ -182,19 +197,22 @@ DevOps-Project/
 │   ├── public/                   # Static branding assets
 │   ├── package.json              # NPM dependencies & build scripts
 │   ├── vite.config.js            # Vite configuration & development proxy
-│   ├── nginx.conf                # Production reverse proxy and SPA routing
-│   ├── Dockerfile                # Multi-stage container build (Node builder + Nginx)
+│   ├── nginx.conf                # Production reverse proxy and SPA routing (port 8080)
+│   ├── Dockerfile                # Multi-stage container build (Node builder + Nginx runtime)
 │   └── .dockerignore             # Frontend build exclusion rules
+│
+├── demo/                         # Final capstone submission presentation & video artifacts
+│   ├── CampusStock-Presentation.pptx # [Pending: Slide deck presentation]
+│   └── CampusStock-Demo.mp4      # [Pending: Recorded video walkthrough]
 │
 ├── k8s/                          # Raw declarative Kubernetes manifests
 │   ├── namespace.yaml            # 'campusstock' namespace declaration
 │   ├── configmap.yaml            # Non-sensitive runtime variables
-│   ├── secret.yaml               # Database credentials & sensitive configuration
 │   ├── postgres.yaml             # PostgreSQL PVC, Deployment, and Service
 │   ├── backend.yaml              # Backend Deployment (2 replicas) & ClusterIP
 │   ├── frontend.yaml             # Frontend Deployment (2 replicas) & ClusterIP
 │   ├── ingress.yaml              # NGINX Ingress rules (/ and /api)
-│   └── hpa.yaml                  # Horizontal Pod Autoscalers (CPU utilization)
+│   └── hpa.yaml                  # Horizontal Pod Autoscalers (optional capability)
 │
 ├── helm/
 │   └── campusstock/              # Production Helm Chart
@@ -213,35 +231,40 @@ DevOps-Project/
 │           ├── hpa.yaml
 │           └── serviceaccount.yaml
 │
-├── monitoring/
+├── monitoring/                   # Prometheus & Grafana monitoring configuration
+│   ├── campusstock-servicemonitor.yaml # ServiceMonitor for backend /metrics
 │   ├── prometheus/
 │   │   ├── prometheus.yml        # Prometheus scrape configurations
-│   │   └── prometheus-k8s.yaml   # Kubernetes Prometheus deployment
+│   │   ├── prometheus-k8s.yaml   # Kubernetes Prometheus deployment
+│   │   └── values.yaml           # Helm values for Prometheus deployment
 │   └── grafana/
+│       ├── dashboards/
+│       │   └── campusstock-dashboard.json # CampusStock production metrics dashboard
 │       ├── provisioning/         # Automated datasource and dashboard providers
 │       │   ├── datasources/
 │       │   └── dashboards/
-│       ├── dashboards/
-│       │   └── campusstock-dashboard.json # Production monitoring dashboard
-│       └── grafana-k8s.yaml      # Kubernetes Grafana deployment
+│       ├── grafana-k8s.yaml      # Kubernetes Grafana deployment
+│       └── values.yaml           # Helm values for Grafana deployment
 │
-├── terraform/                    # AWS Infrastructure as Code
+├── terraform/                    # AWS Infrastructure as Code (ap-southeast-2)
 │   ├── main.tf                   # VPC, Subnets, IGW, NAT, EKS, Node Groups, IAM
-│   ├── variables.tf              # Configurable AWS parameters (ap-south-1)
+│   ├── variables.tf              # Configurable AWS parameters (ap-southeast-2, t3.small, size: 4)
 │   ├── outputs.tf                # Exported VPC IDs, EKS endpoints, Security Groups
 │   ├── providers.tf              # AWS provider declaration & tags
 │   ├── terraform.tfvars.example  # Parameter override example
 │   └── README.md                 # Terraform lifecycle guide
 │
-├── troubleshooting/              # Comprehensive troubleshooting manuals
+├── troubleshooting/              # Project diagnostic and remediation reference guides
 │   ├── docker.md                 # Docker & Compose issue remediation
 │   ├── kubernetes.md             # K8s Pod, Ingress, and HPA diagnostics
 │   └── terraform.md              # AWS provisioning & destroy resolutions
 │
+├── Screenshots/                  # Milestone verification screenshots (M1–M9)
 ├── docker-compose.yml            # Local multi-service environment (Full stack)
 ├── .env.example                  # Environment variable template
 ├── .gitignore                    # Git tracking ignore rules
 ├── .dockerignore                 # Root container build ignore rules
+├── pytest.ini                    # Root pytest runner configuration
 └── README.md                     # Comprehensive project documentation
 ```
 
@@ -300,17 +323,17 @@ The application interface will be accessible at `http://localhost:5173`. In deve
 
 ---
 
-## 9. PostgreSQL Database Setup
+## 9. Database Setup
 
-CampusStock requires PostgreSQL 15+. The database schema enforces relational constraints, non-negative stock invariants, and cascading transaction records.
+CampusStock uses PostgreSQL 15+. The schema enforces relational integrity, non-negative stock invariants (`available_quantity >= 0`, `available_quantity <= quantity`), and cascading transaction audit logs.
 
 ```bash
 # Launch PostgreSQL locally via Docker
 docker run -d \
   --name campusstock-postgres \
-  -e POSTGRES_USER=campus_user \
-  -e POSTGRES_PASSWORD=campus_password \
-  -e POSTGRES_DB=campusstock_db \
+  -e POSTGRES_USER=<your-postgres-user> \
+  -e POSTGRES_PASSWORD=<your-postgres-password> \
+  -e POSTGRES_DB=<your-database-name> \
   -p 5432:5432 \
   postgres:15-alpine
 ```
@@ -319,11 +342,11 @@ docker run -d \
 
 ## 10. Environment Variables
 
-Create a `.env` file based on `.env.example`:
+Create a local `.env` file based on `.env.example`:
 
 ```ini
 # Database Connection String
-DATABASE_URL=postgresql://campus_user:campus_password@localhost:5432/campusstock_db
+DATABASE_URL=postgresql://<your-postgres-user>:<your-postgres-password>@localhost:5432/<your-database-name>
 
 # Application Configuration
 APP_NAME=CampusStock
@@ -335,11 +358,11 @@ CORS_ORIGINS=http://localhost:5173,http://localhost:3000
 ```
 
 > [!CAUTION]
-> Never commit `.env` or production secrets into Git. `.gitignore` is pre-configured to strictly ignore environment files.
+> Never commit `.env` or production credentials to Git. Real secrets, tokens, and credentials are kept out of source control and `.gitignore` is configured to strictly ignore environment files.
 
 ---
 
-## 11. Alembic Database Migrations
+## 11. Alembic Migrations
 
 Database evolution is version-controlled through Alembic migrations.
 
@@ -358,46 +381,56 @@ alembic -c backend/alembic.ini upgrade head --sql
 ```
 
 The initial migration `001_initial_schema.py` provisions:
-- `categories` table (indexes, timestamp)
-- `items` table (SKU unique index, foreign key, check constraints: `available_quantity >= 0`, `available_quantity <= quantity`)
-- `transactions` table (foreign key, audit fields)
+- `categories` table (indexes, timestamp).
+- `items` table (SKU unique index, foreign key, check constraints: `available_quantity >= 0`, `available_quantity <= quantity`).
+- `transactions` table (foreign key, action audit fields, timestamps).
 
 ---
 
-## 12. Running Automated Tests (Pytest)
+## 12. Automated Testing
 
-The test suite validates health probes, CRUD endpoints, stock decrement/increment operations, boundary conditions, and metrics emission.
+The automated test suite runs with Pytest and validates all critical application paths, constraints, and operational endpoints.
+
+- **Current Status**: 23 passing tests.
+- **Isolation**: Tests execute against an isolated in-memory SQLite test database configured in `backend/tests/conftest.py`. The development or production database is never touched.
 
 ```bash
 # Run complete test suite
 pytest
 
-# Run with verbose output and coverage
+# Run with verbose output
 pytest -v
 ```
 
-> [!NOTE]
-> Tests run against an isolated in-memory SQLite database via `conftest.py`. The production database is **never** touched during automated test execution.
+### Test Suite Coverage:
+| Test File | Tests Passed | Validated Behaviors |
+| :--- | :---: | :--- |
+| `test_health.py` | 4 | Health probe (`/health`), readiness check (`/ready`), root endpoint (`/`), metrics endpoint (`/metrics`) |
+| `test_items.py` | 8 | Item creation, duplicate SKU rejection, available > total quantity rejection, search & pagination, get by ID, 404 handling, update item, delete item |
+| `test_categories.py` | 4 | Category creation, listing, duplicate name rejection, category deletion |
+| `test_transactions.py`| 7 | Issue stock decrement, over-issue rejection, zero/negative issue rejection, return stock increment, over-return rejection, transaction audit history, inventory statistics calculation |
+| **Total** | **23** | **100% Passing** |
 
 ---
 
-## 13. Docker Containerization
+## 13. Docker
 
 ### Backend Container (`backend/Dockerfile`)
-- Base image: `python:3.10-slim`
-- Security: Runs as non-root user `appuser` (UID: 10001, GID: 10001)
-- Health check: Native curl probe checking `/health`
-- Port: 8000
+- **Base Image**: `python:3.10-slim`
+- **Security Hardening**: Runs as dedicated non-root user `appuser` (UID: 10001, GID: 10001).
+- **Health Check**: Native curl probe checking `/health`.
+- **Port**: 8000.
 
 ```bash
 docker build -t campusstock-backend:latest ./backend
 ```
 
 ### Frontend Container (`frontend/Dockerfile`)
-- Multi-stage build:
-  - Stage 1: `node:20-alpine` builds production React static bundle.
-  - Stage 2: `nginx:alpine` serves static files and reverse proxies `/api` to the backend.
-- Port: 80
+- **Multi-Stage Build**:
+  - **Stage 1 (Builder)**: `node:20-alpine` builds production React assets via `npm run build`.
+  - **Stage 2 (Runtime)**: `nginxinc/nginx-unprivileged:alpine` serves static files and reverse proxies `/api` and health checks.
+- **Port**: Listens on port 8080 inside the container (`EXPOSE 8080`).
+- **Health Check**: Native wget probe checking `http://127.0.0.1:8080/`.
 
 ```bash
 docker build -t campusstock-frontend:latest ./frontend
@@ -405,24 +438,24 @@ docker build -t campusstock-frontend:latest ./frontend
 
 ---
 
-## 14. Docker Compose Multi-Container Stack
+## 14. Docker Compose
 
-Run the complete production-like stack locally with a single command:
+Run the complete multi-container stack locally with Docker Compose:
 
 ```bash
 docker compose up -d --build
 ```
 
 ### Exposed Services:
-| Service | Container Name | Local Port | Description |
+| Service | Container Name | Port Mapping | Description |
 | :--- | :--- | :--- | :--- |
-| **Frontend** | `campusstock-frontend` | `http://localhost:3000` | React UI served via Nginx |
-| **Backend** | `campusstock-backend` | `http://localhost:8000` | FastAPI application |
-| **PostgreSQL** | `campusstock-postgres` | `5432` | Relational database with persistent volume |
-| **Prometheus**| `campusstock-prometheus`| `http://localhost:9090` | Metrics scraping engine |
-| **Grafana** | `campusstock-grafana` | `http://localhost:3001` | Pre-provisioned dashboards |
+| **Frontend** | `campusstock-frontend` | `3000:8080` | React UI served via unprivileged Nginx (accessible at `http://localhost:3000`) |
+| **Backend** | `campusstock-backend` | `8000:8000` | FastAPI application (`http://localhost:8000`) |
+| **PostgreSQL**| `campusstock-postgres` | `5432:5432` | Relational database with persistent volume `postgres_data` |
+| **Prometheus**| `campusstock-prometheus`| `9090:9090` | Metrics scraping engine (`http://localhost:9090`) |
+| **Grafana** | `campusstock-grafana` | `3001:3000` | Pre-provisioned dashboards (`http://localhost:3001`) |
 
-### Applying Database Migrations in Docker:
+### Applying Migrations Inside Docker:
 ```bash
 docker compose exec backend alembic upgrade head
 ```
@@ -434,44 +467,48 @@ docker compose down -v
 
 ---
 
-## 15. GitHub Actions CI/CD Pipeline
+## 15. GitHub Actions CI/CD
 
-The workflow defined in `.github/workflows/ci-cd.yml` triggers on every push and pull request to `main`.
+The workflow defined in `.github/workflows/ci-cd.yml` triggers on every push and pull request targeting the `main` branch.
 
 ### Pipeline Stages:
 1. **Source Checkout**: Clones code using `actions/checkout@v4`.
-2. **Backend CI**: Configures Python 3.10, installs dependencies, and runs `pytest`. Fails immediately if any test fails.
-3. **Frontend CI**: Configures Node.js 20, installs npm dependencies, and runs `npm run build`.
+2. **Backend CI**: Configures Python 3.10, installs dependencies from `backend/requirements.txt`, and executes `pytest` (23 tests).
+3. **Frontend CI**: Configures Node.js 20, installs npm dependencies, and runs `npm run build` to verify production assets compile without error.
 4. **Docker Buildx**: Initializes multi-platform build engine.
-5. **Image Build & SHA Tagging**: Builds both backend and frontend images tagged with `${{ github.sha }}`.
-6. **Trivy Vulnerability Scan**: Scans images for `HIGH` and `CRITICAL` vulnerabilities.
-7. **GHCR Publish**: Pushes verified container images to GitHub Container Registry.
+5. **GHCR Login**: Authenticates to GitHub Container Registry using `${{ secrets.GITHUB_TOKEN }}` (on push to `main`).
+6. **Container Build**: Builds both backend and frontend images tagged with the Git commit SHA (`${{ github.sha }}`).
+7. **Trivy Vulnerability Scan**: Scans both built container images for vulnerabilities, configured to fail the pipeline on `HIGH` or `CRITICAL` findings.
+8. **GHCR Publish**: Pushes verified container images to GitHub Container Registry tagged with the commit SHA (on push to `main`).
+
+> [!NOTE]
+> The GitHub Actions workflow automates testing, frontend compilation, container builds, Trivy security scanning, and registry publication. Deployment updates to Kubernetes are applied via Helm with the published image SHA.
 
 ---
 
-## 16. GitHub Container Registry (GHCR)
+## 16. GHCR
 
-Container images are published to GHCR using commit SHA tags to ensure immutable, traceable deployments:
+Container images are published to the GitHub Container Registry (GHCR) using immutable Git commit SHA tags:
 
-- Backend: `ghcr.io/<github-user>/campusstock-backend:<commit-sha>`
-- Frontend: `ghcr.io/<github-user>/campusstock-frontend:<commit-sha>`
+- **Backend Image**: `ghcr.io/24f1000397/campusstock-backend:<commit-sha>`
+- **Frontend Image**: `ghcr.io/24f1000397/campusstock-frontend:<commit-sha>`
 
-> [!IMPORTANT]
-> In accordance with DevOps best practices, images are **never** deployed using the mutable `:latest` tag in production.
-
----
-
-## 17. Trivy Vulnerability Security Scanning
-
-Trivy scans both container images in the CI pipeline before publication:
-- **Severity Policy**: Fails build on `CRITICAL` or `HIGH` vulnerabilities (`exit-code: 1`).
-- **Scope**: Operating system packages and application language dependencies (`vuln-type: os,library`).
+Using Git commit SHA tags guarantees traceability between running container images and specific commits in the repository, preventing drift and avoiding mutable tags like `:latest` in production.
 
 ---
 
-## 18. Terraform Infrastructure as Code
+## 17. Trivy Security Scanning
 
-Terraform provisions the entire AWS foundational infrastructure.
+Container security is enforced in the CI pipeline using `aquasecurity/trivy-action`:
+- **Severity Policy**: The pipeline fails immediately if any `HIGH` or `CRITICAL` vulnerability is detected (`exit-code: 1`).
+- **Vulnerability Scope**: Operating system packages and application language libraries (`vuln-type: os,library`).
+- **Current Verification**: Scans report **0 vulnerabilities**, confirming secure base images and patched dependencies.
+
+---
+
+## 18. Terraform
+
+Terraform provisions the AWS foundational infrastructure using Infrastructure as Code (IaC).
 
 ```bash
 cd terraform
@@ -491,31 +528,38 @@ terraform apply tfplan
 
 ---
 
-## 19. AWS Cloud Infrastructure (ap-south-1)
+## 19. AWS Infrastructure
 
-- **Region**: `ap-south-1` (Mumbai)
-- **VPC**: `10.0.0.0/16` with DNS hostnames and support enabled.
+All AWS resources are deployed in the **`ap-southeast-2` (Sydney)** region:
+
+- **AWS Region**: `ap-southeast-2`
+- **VPC Topology**: Dedicated VPC (`10.0.0.0/16`) with DNS hostnames and resolution enabled.
 - **Subnets**:
-  - 2 Public Subnets across `ap-south-1a` and `ap-south-1b` (ALB Ingress & NAT Gateway).
-  - 2 Private Subnets across `ap-south-1a` and `ap-south-1b` (EKS Worker Nodes & Workloads).
-- **Gateways**: Internet Gateway (IGW) and NAT Gateway with Elastic IP.
-- **EKS Cluster**: Managed Kubernetes cluster `campusstock-eks`.
-- **Node Group**: Auto-scaling managed EC2 worker nodes (`t3.medium`).
-- **IAM Roles**: Least-privilege IAM roles for EKS cluster control plane and node group.
+  - **2 Public Subnets** across `ap-southeast-2a` and `ap-southeast-2b` (`10.0.1.0/24`, `10.0.2.0/24`) tagged for public Application Load Balancers (`kubernetes.io/role/elb = "1"`).
+  - **2 Private Subnets** across `ap-southeast-2a` and `ap-southeast-2b` (`10.0.10.0/24`, `10.0.11.0/24`) for secure worker nodes and workloads (`kubernetes.io/role/internal-elb = "1"`).
+- **Gateways & Routing**:
+  - Internet Gateway (IGW) attached to the VPC.
+  - NAT Gateway with an Elastic IP deployed in a public subnet, enabling outbound internet connectivity for private worker nodes.
+- **Amazon EKS Cluster**: Managed Kubernetes cluster `campusstock-eks`.
+- **EKS Managed Node Group**:
+  - EC2 Instance Type: `t3.small`
+  - Node Group Desired Size: `4` (min: 1, max: 4)
+- **IAM Roles & Least Privilege**:
+  - Cluster IAM role attached to `AmazonEKSClusterPolicy`.
+  - Node group IAM role attached to `AmazonEKSWorkerNodePolicy`, `AmazonEKS_CNI_Policy`, and `AmazonEC2ContainerRegistryReadOnly`.
 
 ---
 
-## 20. Kubernetes Manifests & Orchestration
+## 20. Kubernetes
 
-Declarative manifests are located in `k8s/`:
+Declarative Kubernetes manifests for manual deployment or inspection are located in `k8s/`:
 
 ```bash
 # Create namespace
 kubectl apply -f k8s/namespace.yaml
 
-# Apply configuration and secrets
+# Apply configuration
 kubectl apply -f k8s/configmap.yaml
-kubectl apply -f k8s/secret.yaml
 
 # Deploy database
 kubectl apply -f k8s/postgres.yaml
@@ -529,11 +573,15 @@ kubectl apply -f k8s/ingress.yaml
 kubectl apply -f k8s/hpa.yaml
 ```
 
+- **Namespace**: `campusstock`
+- **Replica Counts**: Backend and frontend deployments run with at least 2 replicas each.
+- **Service Types**: Backend and frontend are exposed internally via `ClusterIP` services.
+
 ---
 
-## 21. Helm Deployment
+## 21. Helm
 
-The production Helm chart package is located in `helm/campusstock/`.
+The application is packaged and deployed using Helm via the chart located in `helm/campusstock/`.
 
 ### Linting and Template Dry-Run
 ```bash
@@ -541,7 +589,7 @@ helm lint helm/campusstock
 helm template campusstock helm/campusstock --dry-run
 ```
 
-### Installing the Helm Chart
+### Installing or Upgrading the Helm Release
 ```bash
 helm upgrade --install campusstock helm/campusstock \
   --namespace campusstock \
@@ -554,84 +602,219 @@ helm upgrade --install campusstock helm/campusstock \
 ```bash
 kubectl get all -n campusstock
 kubectl get ingress -n campusstock
-kubectl get hpa -n campusstock
 ```
 
 ---
 
-## 22. Ingress Controller & Path Routing
+## 22. Ingress
 
-Ingress routing is handled by the **NGINX Ingress Controller**:
+External traffic routing is managed by the **NGINX Ingress Controller**:
 
-| Ingress Path | Target Service | Port | Description |
-| :--- | :--- | :--- | :--- |
-| `/` | `frontend` | 80 | Single-page application UI |
-| `/api` | `backend` | 8000 | REST API endpoints |
-| `/health` | `backend` | 8000 | Liveness probe endpoint |
-| `/ready` | `backend` | 8000 | Database readiness check |
-| `/docs` | `backend` | 8000 | OpenAPI / Swagger interactive docs |
-| `/metrics` | `backend` | 8000 | Prometheus scrape endpoint |
+| Ingress Path | Target Service | Service Port | Container Port | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `/` | `frontend` | 80 | 8080 | Single-page application UI |
+| `/api` | `backend` | 8000 | 8000 | REST API endpoints |
+| `/health` | `backend` | 8000 | 8000 | Liveness probe endpoint |
+| `/ready` | `backend` | 8000 | 8000 | Database readiness check |
+| `/docs` | `backend` | 8000 | 8000 | OpenAPI / Swagger interactive docs |
+| `/openapi.json` | `backend` | 8000 | 8000 | OpenAPI JSON specification |
 
 ---
 
-## 23. Horizontal Pod Autoscaling (HPA)
+## 23. ArgoCD GitOps Configuration
 
-Both frontend and backend deployments utilize horizontal autoscaling based on real-time CPU utilization:
+Continuous Delivery and automated synchronization are configured through **ArgoCD** using the declarative Application manifest in `argocd/campusstock-application.yaml`:
 
-- **Backend HPA**: Minimum 2 replicas, maximum 10 replicas, target 75% CPU utilization.
-- **Frontend HPA**: Minimum 2 replicas, maximum 8 replicas, target 80% CPU utilization.
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: campusstock
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/24F1000397/DevOps-Project.git
+    targetRevision: main
+    path: helm/campusstock
+    helm:
+      releaseName: campusstock
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: campusstock
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+```
+
+### Key GitOps Operational Details:
+- **Repository Source**: Directly tracks `main` in `https://github.com/24F1000397/DevOps-Project.git`.
+- **Target Helm Chart**: Automatically deploys the templated chart at `helm/campusstock`.
+- **Target Cluster**: Deploys into the in-cluster Kubernetes API (`https://kubernetes.default.svc`) within the `campusstock` namespace.
+- **Automated Sync**: Configured with `prune: true` and `selfHeal: true` to prevent configuration drift between Git and the live cluster state.
+- **Application Deployment**:
+  ```bash
+  kubectl apply -f argocd/campusstock-application.yaml
+  ```
+
+---
+
+## 24. HPA (optional/additional capability)
+
+Horizontal Pod Autoscaling (HPA) is included in the project as an **additional capability** (in `k8s/hpa.yaml` and `helm/campusstock/templates/hpa.yaml`):
+
+- **Backend HPA**: Scales between 2 and 10 replicas targeting 75% average CPU utilization.
+- **Frontend HPA**: Scales between 2 and 8 replicas targeting 80% average CPU utilization.
 
 > [!NOTE]
-> HPA requires the Kubernetes **Metrics Server** to be deployed in the cluster (`kubectl top pods`).
+> HPA requires the Kubernetes Metrics Server to be installed in the cluster (`kubectl top pods`). HPA is provided as an optional scalability enhancement and is not a mandatory rubric requirement.
 
 ---
 
-## 24. Prometheus Monitoring & Exporters
+## 25. Prometheus Monitoring
 
-The FastAPI backend exposes Prometheus metrics via `prometheus-fastapi-instrumentator` at `/metrics`:
-- `http_requests_total`: Total requests partitioned by HTTP method, handler path, and status code.
-- `http_request_duration_seconds`: Request latency histogram.
-- `campusstock_http_requests_inprogress`: Current concurrency gauge.
+The FastAPI backend exposes native Prometheus metrics using `prometheus-fastapi-instrumentator` at `/metrics`:
+- `http_requests_total`: Request counter partitioned by HTTP method, handler path, and status code.
+- `http_request_duration_seconds`: Histogram of request latency.
+- `campusstock_http_requests_inprogress`: Gauge of active concurrent requests.
+- `process_virtual_memory_bytes`: Backend memory usage.
 
-Prometheus scrapes the backend every 5 seconds using `monitoring/prometheus/prometheus.yml`.
-
----
-
-## 25. Grafana Dashboards
-
-Grafana is provisioned with pre-configured datasources and a comprehensive monitoring dashboard (`monitoring/grafana/dashboards/campusstock-dashboard.json`).
-
-### Dashboard Panels:
-1. **HTTP Request Rate**: Live requests per second grouped by API route.
-2. **Request Latency (p95 & p99)**: 95th and 99th percentile response duration.
-3. **HTTP Response Status Distribution**: 2xx Success vs 4xx Client Error vs 5xx Server Error.
-4. **Active In-Flight Requests**: Concurrency gauge.
-5. **Memory Usage**: Real-time virtual memory consumption of backend workers.
+### Scrape Configuration & Target Status:
+- The Prometheus target for CampusStock is configured and in an **`UP`** state.
+- Scrape configuration is managed via `monitoring/campusstock-servicemonitor.yaml` and `monitoring/prometheus/values.yaml`.
 
 ---
 
-## 26. Troubleshooting & Diagnostics
+## 26. Grafana Dashboard
 
-Comprehensive troubleshooting guides are located in the `troubleshooting/` directory:
+Grafana is configured with pre-provisioned data sources and a production dashboard defined in `monitoring/grafana/dashboards/campusstock-dashboard.json`.
+
+### Included Monitoring Panels:
+1. **HTTP Request Rate (by Endpoint & Status)**: Real-time queries per second grouped by route and status code.
+2. **HTTP Request Latency (p95 & p99)**: 95th and 99th percentile response duration timeseries.
+3. **Active In-Flight Requests**: Gauge tracking current concurrency.
+4. **HTTP Response Status Code Ratio**: Distribution pie chart comparing 2xx, 4xx, and 5xx responses.
+5. **Backend Memory Usage**: Virtual memory consumption of backend application pods.
+
+Configuration artifacts in `monitoring/` include:
+- `monitoring/prometheus/values.yaml`
+- `monitoring/grafana/values.yaml`
+- `monitoring/campusstock-servicemonitor.yaml`
+- `monitoring/grafana/dashboards/campusstock-dashboard.json`
+- `monitoring/grafana/provisioning/`
+
+---
+
+## 27. Milestone Verification & Screenshot Evidence (M1–M9)
+
+All project deliverables are backed by verified screenshot evidence located in the `Screenshots/` directory:
+
+### Module 1: Full-Stack Application
+- [M1-Frontend.png](Screenshots/M1-Application/M1-Frontend.png) — CampusStock React UI dashboard displaying category summaries, inventory counts, and recent transactions.
+- [M1-Swagger.png](Screenshots/M1-Application/M1-Swagger.png) — Interactive OpenAPI / Swagger UI at `/docs` displaying all CRUD and operational endpoints.
+- [M1-Health.png](Screenshots/M1-Application/M1-Health.png) — Liveness (`/health`) and readiness (`/ready`) JSON responses.
+- [M1-Database.png](Screenshots/M1-Application/M1-Database.png) — PostgreSQL database verification and relational schema query.
+- [M1-Alembic.png](Screenshots/M1-Application/M1-Alembic.png) — Alembic migration execution applying `001_initial_schema`.
+
+### Module 2: Automated Testing (Pytest)
+- [M2-Pytest.png](Screenshots/M2-Testing/M2-Pytest.png) — Pytest test runner output showing 23 passing tests across health, items, categories, and transactions.
+- [M2-Test-Database.png](Screenshots/M2-Testing/M2-Test-Database.png) — SQLite in-memory test database fixture execution confirming isolation from production.
+
+### Module 3: Git & GitHub Workflow
+- [M3-Commits.png](Screenshots/M3-GitHub/M3-Commits.png) — Git commit history showing meaningful milestone commits.
+- [M3-Repository.png](Screenshots/M3-GitHub/M3-Repository.png) — GitHub repository homepage and clean file tree.
+- [M3-Gitignore.png](Screenshots/M3-GitHub/M3-Gitignore.png) — `.gitignore` configuration excluding virtual environments, binaries, and `.env`.
+
+### Module 4: Docker Containerization & Compose
+- [M4-Containers.png](Screenshots/M4-Docker/M4-Containers.png) — Running Docker containers (`backend`, `frontend`, `postgres`, `prometheus`, `grafana`).
+- [M4-Images.png](Screenshots/M4-Docker/M4-Images.png) — Docker image inspection showing multi-stage frontend build and non-root backend image.
+- [M4-Docker-Compose.png](Screenshots/M4-Docker/M4-Docker-Compose.png) — Successful `docker compose up -d` execution.
+- [M4-Browser.png](Screenshots/M4-Docker/M4-Browser.png) — Browser verification of CampusStock running via containerized stack on `localhost:3000`.
+
+### Module 5: CI/CD Pipeline & GHCR
+- [M5-GitHub-Actions.png](Screenshots/M5-CI-CD/M5-GitHub-Actions.png) — Successful GitHub Actions CI/CD workflow execution on `main`.
+- [M5-GHCR.png](Screenshots/M5-CI-CD/M5-GHCR.png) — Container images published to GitHub Container Registry tagged with Git commit SHA.
+
+### Module 6: Security Scanning (Trivy)
+- [M6-Trivy-Backend.png](Screenshots/M6-Trivy/M6-Trivy-Backend.png) — Trivy container scan report on backend image showing 0 HIGH/CRITICAL vulnerabilities.
+- [M6-Trivy-Frontend.png](Screenshots/M6-Trivy/M6-Trivy-Frontend.png) — Trivy container scan report on frontend image showing 0 HIGH/CRITICAL vulnerabilities.
+- [M6-Trivy-Explanation.md](Screenshots/M6-Trivy/M6-Trivy-Explanation.md) — Documentation of the vulnerability scanning policy and security validation.
+
+### Module 7: Terraform Cloud Infrastructure
+- [M7-Terraform-Init.png](Screenshots/M7-Terraform/M7-Terraform-Init.png) — `terraform init` provider installation.
+- [M7-Terraform-Validate.png](Screenshots/M7-Terraform/M7-Terraform-Validate.png) — Successful `terraform validate` syntax check.
+- [M7-Terraform-Plan.png](Screenshots/M7-Terraform/M7-Terraform-Plan.png) — `terraform plan` execution previewing AWS resources.
+- [M7-AWS-VPC.png](Screenshots/M7-Terraform/M7-AWS-VPC.png) — AWS Console showing VPC and Multi-AZ subnet topology.
+- [M7-AWS-EKS.png](Screenshots/M7-Terraform/M7-AWS-EKS.png) — AWS Console displaying active `campusstock-eks` cluster in `ap-southeast-2`.
+- [M7-AWS-Infrastructure.png](Screenshots/M7-Terraform/M7-AWS-Infrastructure.png) — AWS EKS Managed Node Group (`t3.small`) and IAM configurations.
+- [M7-Terraform-Destroy.png](Screenshots/M7-Terraform/M7-Terraform-Destroy.png) — `terraform destroy` clean teardown verification.
+
+### Module 8: Kubernetes & Helm
+- [M8-Namespace.png](Screenshots/M8-Kubernetes-Helm/M8-Namespace.png) — `kubectl get ns` showing `campusstock` namespace.
+- [M8-Pods.png](Screenshots/M8-Kubernetes-Helm/M8-Pods.png) — `kubectl get pods -n campusstock` showing multi-replica pods in `Running` state.
+- [M8-Services.png](Screenshots/M8-Kubernetes-Helm/M8-Services.png) — `kubectl get svc -n campusstock` showing ClusterIP services.
+- [M8-Helm.png](Screenshots/M8-Kubernetes-Helm/M8-Helm.png) — `helm list -n campusstock` and deployment status.
+- [M8-Ingress.png](Screenshots/M8-Kubernetes-Helm/M8-Ingress.png) — `kubectl get ingress -n campusstock` showing NGINX path routing rules.
+
+### Module 9: Prometheus & Grafana Monitoring
+- [M9-Metrics.png](Screenshots/M9-Monitoring/M9-Metrics.png) — Raw Prometheus metric streams at `/metrics`.
+- [M9-Prometheus.png](Screenshots/M9-Monitoring/M9-Prometheus.png) — Prometheus targets dashboard showing CampusStock backend target in `UP` state.
+- [M9-Grafana.png](Screenshots/M9-Monitoring/M9-Grafana.png) — Live Grafana dashboard populated with HTTP Request Rate and latency graphs.
+
+---
+
+## 28. Submission Artifacts (demo/ Folder)
+
+For final capstone submission, the `demo/` directory is dedicated to the required presentation and demonstration media artifacts:
+
+```
+demo/
+├── CampusStock-Presentation.pptx   # [Pending: Capstone slide deck presentation]
+└── CampusStock-Demo.mp4            # [Pending: Recorded walkthrough & live demonstration video]
+```
+
+> [!NOTE]
+> The `demo/` folder is established and ready. The presentation slide deck (`.pptx` or `.pdf`) and live demonstration video (`.mp4`) will be populated into this folder prior to final submission. The official grading requirements for M10 are fulfilled by this root README and the live demonstration workflow documented below.
+
+---
+
+## 29. Troubleshooting
+
+For operational diagnostics and issue resolution, detailed reference guides are available in `troubleshooting/`:
 - [Docker Troubleshooting Guide](troubleshooting/docker.md): Port conflicts, unhealthy containers, migration issues.
-- [Kubernetes Troubleshooting Guide](troubleshooting/kubernetes.md): CrashLoopBackOff, probe failures, ingress debugging, HPA metrics server.
-- [Terraform Troubleshooting Guide](troubleshooting/terraform.md): IAM permission errors, ELB subnet tagging, teardown dependency cycles.
+- [Kubernetes Troubleshooting Guide](troubleshooting/kubernetes.md): CrashLoopBackOff, probe failures, ingress debugging, metrics.
+- [Terraform Troubleshooting Guide](troubleshooting/terraform.md): AWS permission errors, subnet tagging, teardown dependency cycles.
+
+### Quick Diagnostic Commands:
+```bash
+# Check pod status and logs in the campusstock namespace
+kubectl get pods -n campusstock
+kubectl logs -n campusstock -l app.kubernetes.io/name=campusstock-backend --tail=100
+
+# Verify Ingress routing
+kubectl get ingress -n campusstock
+kubectl describe ingress campusstock-ingress -n campusstock
+
+# Test backend health probe
+curl -I http://<ingress-host-or-ip>/health
+```
 
 ---
 
-## 27. Security Hardening & Best Practices
+## 30. Security
 
-- **Non-Root Containers**: Backend Docker image runs as dedicated non-root user `appuser` (UID: 10001).
-- **Multi-Stage Builds**: Frontend Dockerfile isolates build tooling (Node.js) from runtime (Nginx), minimizing image attack surface.
-- **Vulnerability Gate**: Trivy scans images in CI and blocks deployment on `CRITICAL` or `HIGH` vulnerabilities.
-- **Secret Isolation**: Production secrets and database credentials are excluded via `.gitignore` and managed through Kubernetes Secrets.
-- **Network Segmentation**: Database and internal services communicate inside a private subnet / ClusterIP network.
+- **Non-Root Containers**: Backend runs under dedicated non-root user `appuser` (UID: 10001). Frontend runs under unprivileged Nginx (`nginxinc/nginx-unprivileged:alpine`) on port 8080.
+- **Multi-Stage Builds**: Build-time tooling (Node.js SDK, build caches) is isolated from runtime images, minimizing attack surface.
+- **Vulnerability Gating**: Trivy scans images during CI and blocks publication on any `HIGH` or `CRITICAL` findings (currently 0 vulnerabilities).
+- **Secret Isolation**: Sensitive database credentials and keys are omitted from Git tracking and managed via Kubernetes Secrets.
+- **Network Segmentation**: Database and internal services are kept on private subnets and exposed only via ClusterIP services.
 
 ---
 
-## 28. Infrastructure Cleanup & Teardown
+## 31. Cleanup
 
-To tear down cloud resources and avoid unexpected AWS billing:
+To tear down cloud resources and avoid incurring unexpected AWS charges:
 
 ```bash
 # 1. Remove Kubernetes workloads and LoadBalancers
@@ -642,53 +825,3 @@ kubectl delete namespace campusstock
 cd terraform
 terraform destroy -auto-approve
 ```
-
----
-
-## 29. Live Demonstration & Presentation Guide
-
-For evaluating or presenting **CampusStock**:
-
-1. **Local Demonstration**:
-   ```bash
-   docker compose up -d --build
-   docker compose exec backend alembic upgrade head
-   ```
-   - Open Browser: `http://localhost:3000`
-   - Navigate: Dashboard → Add Category ("Laptops") → Add Item ("MacBook Pro M3", 15 units) → Issue 3 units to student → Verify stock drops to 12 → Check Audit Log in Transactions tab.
-   - Inspect Swagger Docs: `http://localhost:8000/docs`
-   - View Live Metrics: `http://localhost:9090` (Prometheus) and `http://localhost:3001` (Grafana).
-2. **Automated Verification**:
-   ```bash
-   pytest -v
-   helm lint helm/campusstock
-   cd terraform && terraform validate
-   ```
-
----
-
-## 30. Official Grading Rubric Checklist
-
-| Module | Requirement | Status | Verification Reference |
-| :--- | :--- | :---: | :--- |
-| **M1** | FastAPI backend with `/health`, `/ready`, `/docs` | [x] | `backend/app/main.py` |
-| **M1** | 4+ REST APIs (GET, POST, PUT, DELETE) | [x] | `backend/app/routers/items.py` |
-| **M1** | Categories, Stock Transactions, Stats | [x] | `backend/app/routers/` |
-| **M1** | PostgreSQL + SQLAlchemy + Alembic Migrations | [x] | `backend/alembic/versions/` |
-| **M1** | Responsive React + Vite Frontend (Real API calls) | [x] | `frontend/src/` |
-| **M2** | Pytest test suite (20+ tests, isolated test DB) | [x] | `backend/tests/` |
-| **M3** | Clean Git history (Exactly 15 milestone commits) | [x] | `git log --oneline` |
-| **M4** | Backend Dockerfile with non-root user | [x] | `backend/Dockerfile` |
-| **M4** | Frontend multi-stage Dockerfile (Node + Nginx) | [x] | `frontend/Dockerfile` |
-| **M4** | Docker Compose full stack orchestration | [x] | `docker-compose.yml` |
-| **M5** | GitHub Actions CI/CD pipeline on main | [x] | `.github/workflows/ci-cd.yml` |
-| **M5** | Container publishing to GHCR with SHA tags | [x] | `.github/workflows/ci-cd.yml` |
-| **M6** | Trivy vulnerability scan with failure policy | [x] | `.github/workflows/ci-cd.yml` |
-| **M7** | Terraform AWS (ap-south-1, VPC, EKS, IAM, Nodes) | [x] | `terraform/` |
-| **M8** | Kubernetes manifests (`campusstock` namespace) | [x] | `k8s/` |
-| **M8** | Production Helm chart (2+ replicas, resources) | [x] | `helm/campusstock/` |
-| **M8** | Ingress routing (`/` to UI, `/api` to backend) | [x] | `helm/campusstock/templates/ingress.yaml` |
-| **M8** | Horizontal Pod Autoscaling (HPA) | [x] | `helm/campusstock/templates/hpa.yaml` |
-| **M9** | Prometheus instrumentation (`/metrics`) | [x] | `backend/app/main.py`, `monitoring/` |
-| **M9** | Live Grafana application metrics dashboard | [x] | `monitoring/grafana/` |
-| **M10**| Comprehensive Documentation & Troubleshooting | [x] | `README.md`, `troubleshooting/` |

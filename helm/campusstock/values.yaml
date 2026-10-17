@@ -6,8 +6,8 @@ namespace: campusstock
 backend:
   replicaCount: 2
   image:
-    repository: ghcr.io/campusstock/campusstock-backend
-    tag: latest
+    repository: ghcr.io/24f1000397/campusstock-backend
+    tag: c46bc44fa2f2f305b4c12defc1d5edd930004bdc
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -38,8 +38,8 @@ backend:
 frontend:
   replicaCount: 2
   image:
-    repository: ghcr.io/campusstock/campusstock-frontend
-    tag: latest
+    repository: ghcr.io/24f1000397/campusstock-frontend
+    tag: c46bc44fa2f2f305b4c12defc1d5edd930004bdc
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -72,11 +72,9 @@ postgres:
   image: postgres:15-alpine
   persistence:
     size: 5Gi
-    storageClass: ""
+    storageClass: "gp2"
   credentials:
-    user: campus_user
-    password: campus_password
-    database: campusstock_db
+    createSecret: false
   resources:
     requests:
       cpu: 100m
