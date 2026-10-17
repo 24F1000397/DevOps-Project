@@ -825,3 +825,5 @@ kubectl delete namespace campusstock
 cd terraform
 terraform destroy -auto-approve
 ```
+
+<!-- Final demo verification -->
